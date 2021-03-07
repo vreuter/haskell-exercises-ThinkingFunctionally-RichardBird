@@ -1,0 +1,26 @@
+{
+  "5F": {
+    "SpanTakeDropSpec.hs": {
+      "description": null, 
+      "tags": ["random function", "QuickCheck", "Hspec", "Show instance", 
+               "show a function", "testing", "unit tests", "universal quantification"], 
+      "examples": {
+        "random function": {"Char -> Bool": null}, 
+        "Show instance for function": {
+          "notes": [
+            "It seems that the instance can't be typed in terms of function signature (a -> b, not Char -> Bool, e.g.)"
+          ]
+        }
+      }, 
+      "notes": [
+        "Show instance for function appears to need generic declaraion rather than type-specific.", 
+        "Randomized values (part of a QuickCheck.Gen) seem to require availability of a Show instance (o/w compilation fails)"
+      ], 
+      "resources": [
+        {
+          "url": "https://kseo.github.io/posts/2016-12-14-how-quick-check-generate-random-functions.html"
+        }
+      ]
+    }
+  }
+}
