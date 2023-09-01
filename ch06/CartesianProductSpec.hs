@@ -88,14 +88,12 @@ main = hspec $ do
         it "is empty list for empty list input" $ do
             null $ CP.cp ([] :: [[Int]])
         it "is empty list IF (-->) any input component is empty" $ do
-            forAll ((,) <$> randomProductFunction <*> (minOneEmpty :: Gen [[Char]])) $ 
-                \(cartProd, xss) -> null $ computeProduct cartProd xss
+            forAll ((,) <$> randomProductFunction <*> (minOneEmpty :: Gen [[Char]])) $ null . uncurry computeProduct
         it "for nonempty input, result is empty ONLY IF (<--) an input component is empty" $ do 
             {-
             Note: this is an EXISTENCE proof ("empty result implies EXISTENCE of an empty input component")
-            In other words, the quantification is existential rather than universal.
             -}
-            forAll (allNonempty :: Gen [[Int]]) $ \xss -> (not . null) $ CP.cp xss
+            forAll (allNonempty :: Gen [[Int]]) $ not . null . CP.cp
         it "yields lists in which each element has length equal to number of original lists" $ do
             forAll (allNonempty :: Gen [[Int]]) $ \xss -> 
                 let nonempty  = (not . null)
