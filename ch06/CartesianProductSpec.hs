@@ -68,13 +68,28 @@ splitAtIndexes xs is = reverse $ map reverse $ go (Data.List.sort is) 0 xs [] []
                                          then go is i rest [] (acc':acc)
                                          else go is' (i + 1) xs (x:acc') acc
 
+newtype CartProd a = CartProd { getNameAndFunction :: (String, [[a]] -> [[a]]) }
+
+extractName :: CartProd a -> String
+extractName = fst . getNameAndFunction
+
+computeProduct :: CartProd a -> [[a]] -> [[a]]
+computeProduct = snd . getNameAndFunction
+
+instance Show (CartProd a) where
+    show = extractName
+
+randomProductFunction :: Gen (CartProd a)
+randomProductFunction = CartProd <$> elements [("cp", CP.cp), ("cp'", CP.cp')]
+
 main :: IO ()
 main = hspec $ do
-    describe "CartesianProduct" $ do
+    describe "CartesianProduct.cp" $ do
         it "is empty list for empty list input" $ do
             null $ CP.cp ([] :: [[Int]])
         it "is empty list IF (-->) any input component is empty" $ do
-            forAll (minOneEmpty :: Gen [[Char]]) $ \xss -> null $ CP.cp xss
+            forAll ((,) <$> randomProductFunction <*> (minOneEmpty :: Gen [[Char]])) $ 
+                \(cartProd, xss) -> null $ computeProduct cartProd xss
         it "for nonempty input, result is empty ONLY IF (<--) an input component is empty" $ do 
             {-
             Note: this is an EXISTENCE proof ("empty result implies EXISTENCE of an empty input component")

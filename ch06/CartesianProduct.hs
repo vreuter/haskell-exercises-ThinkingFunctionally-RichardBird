@@ -6,7 +6,7 @@ Vince Reuter
 August 2019
 -}
 
-module CartesianProduct (cp) where
+module CartesianProduct (cp, cp') where
 
 -- Cartesian product over a collection of input lists
 {-
@@ -44,3 +44,6 @@ cp = foldr addAll []
 
 addAll :: [a] -> [[a]] -> [[a]]
 addAll xs xss = if null xss then [[x] | x <- xs] else [x:xs' | x <- xs, xs' <- xss]
+
+cp' :: [[a]] -> [[a]]
+cp' = foldr (\xs acc -> [x:ys | x <- xs, ys <- acc]) [[]]
