@@ -82,32 +82,37 @@ instance Show (CartProd a) where
 randomProductFunction :: Gen (CartProd a)
 randomProductFunction = CartProd <$> elements [("cp", CP.cp), ("cp'", CP.cp')]
 
+genFuncArgPair :: Gen [[a]] -> Gen (CartProd a, [[a]])
+genFuncArgPair genArg = (,) <$> randomProductFunction <*> genArg
+
 main :: IO ()
 main = hspec $ do
     describe "CartesianProduct.cp" $ do
         it "is empty list for empty list input" $ do
             null $ CP.cp ([] :: [[Int]])
         it "is empty list IF (-->) any input component is empty" $ do
-            forAll ((,) <$> randomProductFunction <*> (minOneEmpty :: Gen [[Char]])) $ null . uncurry computeProduct
+            forAll (genFuncArgPair (minOneEmpty :: Gen [[Char]])) $ null . uncurry computeProduct
         it "for nonempty input, result is empty ONLY IF (<--) an input component is empty" $ do 
             {-
             Note: this is an EXISTENCE proof ("empty result implies EXISTENCE of an empty input component")
             -}
-            forAll (allNonempty :: Gen [[Int]]) $ not . null . CP.cp
+            forAll (genFuncArgPair (allNonempty :: Gen [[Int]])) $ not . null . uncurry computeProduct
         it "yields lists in which each element has length equal to number of original lists" $ do
-            forAll (allNonempty :: Gen [[Int]]) $ \xss -> 
+            forAll (genFuncArgPair (allNonempty :: Gen [[Int]])) $ \(cartProd, xss) -> 
                 let nonempty  = (not . null)
                     n         = length xss
                     allExpLen = all ((==n) . length)
-                in nonempty xss && (allExpLen $ CP.cp xss)
+                in nonempty xss && allExpLen (computeProduct cartProd xss)
         it "has size equal to the product of the sizes of the inputs" $ do
-            forAll (allNonempty :: Gen [[Int]]) $ \xss -> length (CP.cp xss) == (product . map length) xss
+            forAll (genFuncArgPair (allNonempty :: Gen [[Int]])) $ \(cartProd, xss) -> 
+                length (computeProduct cartProd xss) == (product . map length) xss
         it "preserves order" $ do
-            forAll (sortedAndParted :: Gen [[Int]]) $ \xss -> 
-                let res = CP.cp xss in res == map Data.List.sort res
+            forAll (genFuncArgPair (sortedAndParted :: Gen [[Int]])) $ \(cartProd, xss) -> 
+                let res = computeProduct cartProd xss 
+                in res == map Data.List.sort res
         it "draws exactly one element from each input sublist, in correct order" $ do
-            forAll (sortPartG $ sublistOf [-10..10]) $ \xss -> 
+            forAll (genFuncArgPair (sortPartG $ sublistOf [-10..10])) $ \(cartProd, xss) -> 
                 let oneOcc x = (==[x]) . filter (==x)
                     sublists = xss `zip` [0..]
-                    check xs = all (\(x, i) -> all (\(xs', i') -> if i == i' then oneOcc x xs' else not (x `elem` xs')) sublists) (xs `zip` [0..])
-                in all check $ CP.cp xss
+                    check xs = all (\(x, i) -> all (\(xs', i') -> if i == i' then oneOcc x xs' else x `notElem` xs') sublists) (xs `zip` [0..])
+                in all check $ computeProduct cartProd xss
